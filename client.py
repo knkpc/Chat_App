@@ -118,13 +118,13 @@ class clientmain:
             return(clientmain.Register())
         
     def Register():
-        choice = input("do you want to Register? yes no")
+        choice = input("do you want to Register? yes : no > ")
         if choice=="yes" or "y" or "Yes":
             username = input("your name: ")
-            phone = input("your phone:")
+            phone = input("your phone: ")
 
             while not usr_Reg().checkPhone(phone):
-                phone = input("Enter Valid phone")
+                phone = input("Enter Valid phone: ")
 
             nusr= usr_Reg().newusr(username,phone)
             if nusr:
