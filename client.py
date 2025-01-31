@@ -2,7 +2,7 @@ import socket
 import pickle
 import sys
 import time
-import yaml
+
 
 from concheck import configChk
 
@@ -63,6 +63,39 @@ class usr_Reg:
             return False
         return True
 
+class Msg:
+    to:str
+    from_:str
+    msg:str
+    timestamp:float
+    UUID:str
+    Name:str
+    Phone:str
+
+    def __init__(self, to:str, UUID:str,Name:str,Phone:str):
+        self.to=to
+        self.from_=Name
+        self.UUID=UUID
+        self.Phone=Phone
+    
+    def sendmessage(self,msg:str):
+        packet=dict(Request="msg",to=self.to,from_=self.Phone,UUID=self.UUID,message=msg)
+        s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+        IP="127.0.0.1"
+        port=9090
+        for i in range(3):
+            try:
+                s.connect((IP,port))
+                s.sendall(pickle.dumps(packet))
+                response=pickle.loads(s.recv(1024))
+                if response:
+                    print("Message sent")
+                    return True
+                    
+            except Exception as e:
+                print(f"{i+1}/3 : Message delivery failure reason {e}")
+                time.sleep(1)
+        return False
 
 class clientmain:
 
@@ -85,29 +118,59 @@ class clientmain:
     def userdetails():
         return configChk.readusr()
     
-    def validUSR():
-        """This checks for user file and validates user data in the file
-            return:
-            - 1 user details are valid
-            - -1 user file doesn't exist
-            - -2 username doesn't exist
-            - -3 phone doesn't exist
-            - -4 UUID doesn't exist 
+    # # def validUSR():
+    #     """This checks for user file and validates user data in the file
+    #         return:
+    #         - 1 user details are valid
+    #         - -1 user file doesn't exist
+    #         - -2 username doesn't exist
+    #         - -3 phone doesn't exist
+    #         - -4 UUID doesn't exist 
 
         
+    #     """
+    #     if configChk.checkusr():
+    #         data=configChk.readusr()
+    #         count =-1
+    #         for key,value in data.items():
+    #             #print(f"{key}:{value}")
+    #             count-=1
+    #             if value is None or value is "":
+    #                 return count
+    #     else:
+    #         return -1
+    #     return 1
+    
+    def validUSR():
+        """This checks for user file and validates user data in the file
+        
+        Returns:
+            - 1  : User details are valid
+            - -1 : User file doesn't exist
+            - -2 : Username is missing
+            - -3 : Phone number is missing
+            - -4 : UUID is missing
         """
-        if configChk.checkusr():
-            data=configChk.readusr()
-            count =-1
-            for key,value in data.items():
-                #print(f"{key}:{value}")
-                count-=1
-                if value is None:
-                    return count
-        else:
-            return -1
-        return 1
-                    
+        if not configChk.checkusr():
+            return -1  # File doesn't exist
+
+        data = configChk.readusr()
+
+        # Ensure all required keys exist in the file
+        required_keys = ["UUID", "name", "phone"]
+        for key in required_keys:
+            if key not in data:
+                return -1  # File exists but missing required keys (invalid format)
+
+        if not data["name"]:
+            return -2
+        if not data["phone"]:
+            return -3
+        if not data["UUID"]:
+            return -4
+
+        return 1  # All details are valid
+           
 
     def loadusr():
         if clientmain.validUSR() ==1:
@@ -119,7 +182,10 @@ class clientmain:
         
     def Register():
         choice = input("do you want to Register? yes : no > ")
-        if choice=="yes" or "y" or "Yes":
+        while choice not in ["No","NO","n","N","yes", "y", "YES","Yes","Y"]:
+            choice = input("Enter only yes : no > ")
+        
+        if choice in ["yes", "y","Y", "YES","Yes"]:
             username = input("your name: ")
             phone = input("your phone: ")
 
@@ -136,11 +202,91 @@ class clientmain:
 
 
 
+def display():
+    options:list=[" 1. Show contacts",
+                  " 2. Add contacts",
+                  " 3. Search contacts",
+                  " 4. Send Message",
+                  "-1. Exit"]
+    for option in options:
+        print("\t \t",option)
+
+def display_contacts():
+    contacts=configChk.readcontacts()
+    #print(f"in dispaly_contacts{contacts}")
+    for usr,phone in contacts.items():
+        print(f"{usr} = {phone}")
+
+def add_contact(name:str, phone:str):
+    configChk.addcontact(name,phone)
+    return True
+
+def get_condetails(name:str):
+    contacts= configChk.readcontacts()
+    if name in contacts:
+        return contacts[name]
+    else:
+        return False
+
+def message(x:Msg, to):
+    print(f"Sending message to {to} : {x.to} ")
+    print(f"\t \t !!!!!Enter Exit to stop sennding message and return to menu")
+    message=""
+    while message not in["Exit","exit"]:
+        message= input('Enter message : ').strip()
+        if len(message)>0 and message not in["Exit","exit"]:
+            x.sendmessage(message)
 
 
 
 clientmain.loader()
-print(clientmain.loadusr())
+data=clientmain.loadusr()
+print(f"\t \t \t Welcome to chat APP: {data['name']}")
+choice=0
+while True:
+    try:
+        display()
+        choice = int(input('\t Enter you choice: ').strip())
+        
+        match choice:
+            case 1:
+                display_contacts()
+            case 2:
+                name:str =input('Enter name of contact: ').strip()
+                phone:str=input('Enter contact numer: ').strip()
+                while not usr_Reg().checkPhone(phone):
+                    phone = input("Enter Valid phone: ").strip()
+                if add_contact(name,phone):
+                    print("contact added successfully")
+                else:
+                    print("Contact hasn't saved")
+            
+            case 3: 
+                to:str =input('Enter name to search contact: ').strip()
+                phone=get_condetails(to)
+                if phone!=False:
+                    print(f"Contact info: \n name: {to}\n Phone: {phone}")
+                    
+                else:
+                    print(f"Unable to find contact {to} ")
+            case 4:
+                to:str =input('Enter contact name to send message: ').strip()
+                phone=get_condetails(to)
+                if phone!=False:
+                    x= Msg(phone,data['UUID'],data['name'],data['phone'])
+                    message(x,to)
+                else:
+                    print(f"Unable to find contact {to} \n add user in your contacts to send message")
+            case -1:
+                print('Exiting Application ;)')
+                break
+            
+            case _:
+                print('Invalid choice')
+    except ValueError:
+        print('Choice should be number')
+    except Exception as e:
+        print(f"An unexpected error occured: {e}")
 
 
     

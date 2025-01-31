@@ -3,6 +3,7 @@ from pathlib import Path
 
 CONFIG_FILE = Path("config.yaml")
 USER_FILE = Path("usr.yaml")
+CONTACTS_FILE= Path("cont.yaml")
 
 class configChk:
 
@@ -19,6 +20,39 @@ class configChk:
         else:
             configChk.createusr()
             return False
+    def checkcontacts(c_file=CONTACTS_FILE):
+        if c_file.exists():
+            return True
+        else:
+            configChk.createcontacts()
+            return False
+    
+    def createcontacts():
+        temp=dict(t_usr0="0000000001", t_usr2="0000000002", t_usr3="0000000003")
+        with open(CONTACTS_FILE,'w') as file:
+            yaml.dump(temp,file)
+
+    def readcontacts():
+        configChk.checkcontacts()
+        with open(CONTACTS_FILE,'r') as file:
+            data = yaml.safe_load(file)
+        
+        if data:
+            return data
+        else:
+            return {}
+
+    def addcontact(name:str, phone:str):
+        with open(CONTACTS_FILE,'r') as file:
+            data = yaml.safe_load(file)
+        
+        if data is None:
+            data={}
+        data.update({name:phone})
+
+        with open(CONTACTS_FILE,'w') as file:
+            yaml.dump(data,file,default_flow_style=False)
+
         
     def createconfig():
         data=dict(IP="127.0.0.1", port=9090)
@@ -43,12 +77,15 @@ class configChk:
         ex:data=dict(name=None, phone=None,UUID=None)
         """
         if not configChk.checkusr():
-            return "Error : user file doesn't Exist"
-        data:dict
-        with open(USER_FILE,'r') as file:
-            data = yaml.safe_load(file)
-        #print(data)
-        return data
+            return {}#"Error : user file doesn't Exist"
+        try:
+            with open(USER_FILE,'r') as file:
+                data = yaml.safe_load(file) or {}
+                if not isinstance(data,dict):
+                    return {}
+                return data
+        except (yaml.YAMLError,FileNotFoundError,IOError):
+            return {}
     
     def setUUID(UUID:str, replace:bool =False):
         """This function is used to stored the UUID received from the server in the usr.yaml file, 
