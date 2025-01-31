@@ -79,7 +79,7 @@ class Msg:
         self.Phone=Phone
     
     def sendmessage(self,msg:str):
-        packet=dict(Request="msg",to=self.to,from_=self.Phone,UUID=self.UUID,message=msg)
+        packet=dict(Request="msg",to=self.to,from_=self.Phone,UUID=self.UUID,message=msg,timestamp=time.time())
         s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         IP="127.0.0.1"
         port=9090
