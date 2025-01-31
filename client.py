@@ -178,7 +178,10 @@ class clientmain:
             return(clientmain.userdetails())
         else:
             print("New User")
-            return(clientmain.Register())
+            if(clientmain.Register()):
+                return(clientmain.userdetails())
+            else:
+                return False
         
     def Register():
         choice = input("do you want to Register? yes : no > ")
@@ -194,9 +197,9 @@ class clientmain:
 
             nusr= usr_Reg().newusr(username,phone)
             if nusr:
-                return "Registered"
+                return True
             else:
-                return "Registration Failed, please try again later"
+                return False
         else:
             print("You need to register to continue..")
 
@@ -241,6 +244,7 @@ def message(x:Msg, to):
 
 clientmain.loader()
 data=clientmain.loadusr()
+print(data)
 print(f"\t \t \t Welcome to chat APP: {data['name']}")
 choice=0
 while True:
