@@ -185,7 +185,7 @@ class clientmain:
         
     def Register():
         choice = input("do you want to Register? yes : no > ")
-        while choice not in ["No","NO","n","N","yes", "y", "YES","Yes","Y"]:
+        while choice not in ["No","NO","n","N","yes", "y", "YES","Yes","Y","no"]:
             choice = input("Enter only yes : no > ")
         
         if choice in ["yes", "y","Y", "YES","Yes"]:
@@ -244,53 +244,54 @@ def message(x:Msg, to):
 
 clientmain.loader()
 data=clientmain.loadusr()
-print(data)
-print(f"\t \t \t Welcome to chat APP: {data['name']}")
-choice=0
-while True:
-    try:
-        display()
-        choice = int(input('\t Enter you choice: ').strip())
+if data!=False:
+    print(data)
+    print(f"\t \t \t Welcome to chat APP: {data['name']}")
+    choice=0
+    while True:
+        try:
+            display()
+            choice = int(input('\t Enter you choice: ').strip())
+            
+            match choice:
+                case 1:
+                    display_contacts()
+                case 2:
+                    name:str =input('Enter name of contact: ').strip()
+                    phone:str=input('Enter contact numer: ').strip()
+                    while not usr_Reg().checkPhone(phone):
+                        phone = input("Enter Valid phone: ").strip()
+                    if add_contact(name,phone):
+                        print("contact added successfully")
+                    else:
+                        print("Contact hasn't saved")
+                
+                case 3: 
+                    to:str =input('Enter name to search contact: ').strip()
+                    phone=get_condetails(to)
+                    if phone!=False:
+                        print(f"Contact info: \n name: {to}\n Phone: {phone}")
+                        
+                    else:
+                        print(f"Unable to find contact {to} ")
+                case 4:
+                    to:str =input('Enter contact name to send message: ').strip()
+                    phone=get_condetails(to)
+                    if phone!=False:
+                        x= Msg(phone,data['UUID'],data['name'],data['phone'])
+                        message(x,to)
+                    else:
+                        print(f"Unable to find contact {to} \n add user in your contacts to send message")
+                case -1:
+                    print('Exiting Application ;)')
+                    break
+                
+                case _:
+                    print('Invalid choice')
+        except ValueError:
+            print('Choice should be number')
+        except Exception as e:
+            print(f"An unexpected error occured: {e}")
+
+
         
-        match choice:
-            case 1:
-                display_contacts()
-            case 2:
-                name:str =input('Enter name of contact: ').strip()
-                phone:str=input('Enter contact numer: ').strip()
-                while not usr_Reg().checkPhone(phone):
-                    phone = input("Enter Valid phone: ").strip()
-                if add_contact(name,phone):
-                    print("contact added successfully")
-                else:
-                    print("Contact hasn't saved")
-            
-            case 3: 
-                to:str =input('Enter name to search contact: ').strip()
-                phone=get_condetails(to)
-                if phone!=False:
-                    print(f"Contact info: \n name: {to}\n Phone: {phone}")
-                    
-                else:
-                    print(f"Unable to find contact {to} ")
-            case 4:
-                to:str =input('Enter contact name to send message: ').strip()
-                phone=get_condetails(to)
-                if phone!=False:
-                    x= Msg(phone,data['UUID'],data['name'],data['phone'])
-                    message(x,to)
-                else:
-                    print(f"Unable to find contact {to} \n add user in your contacts to send message")
-            case -1:
-                print('Exiting Application ;)')
-                break
-            
-            case _:
-                print('Invalid choice')
-    except ValueError:
-        print('Choice should be number')
-    except Exception as e:
-        print(f"An unexpected error occured: {e}")
-
-
-    
